@@ -1,8 +1,4 @@
-# jackknife是一种敏感性分析
-# 它的核心目的是：系统地评估移除任何一个B.1.1.7感染个体对模型整体结果（如病毒动力学参数估计）的影响。
-# 这种分析旨在回答一个非常重要的敏感性问题：“我们的结论是否过分依赖于某一个特殊的个体？”
-# 具体来说，研究者可以比较这7份 dist_summary_no....csv 文件。如果排除任何一个B.1.1.7个体后，B.1.1.7组的参数估计（如平均峰值病毒载量 peak.geml.B117_mean）没有发生剧烈变化，
-# 那么就说明模型的发现是稳健的（robust），不依赖于单个数据点。
+# jackknife: sensitivity analysis
 
 library(tidyverse) 
 library(scales)
