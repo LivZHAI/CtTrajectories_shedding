@@ -1,40 +1,33 @@
 # calculate quantile of posterior estimates
 # output includes three cols，which are mean，90low，90up
 dist_summary <- shared_params_df %>% 
-	summarise(
-		peak.ct.WT_mean=mean(global_pars[["lod"]]-dpmeanW),
-		peak.ct.WT_lwr95=quantile(global_pars[["lod"]]-dpmeanW,0.05),
-		peak.ct.WT_upr95=quantile(global_pars[["lod"]]-dpmeanW,0.95),
-		peak.geml.WT_mean=mean(convert_Ct_logGEML(global_pars[["lod"]]-dpmeanW)),
-		peak.geml.WT_lwr95=quantile(convert_Ct_logGEML(global_pars[["lod"]]-dpmeanW),0.05),
-		peak.geml.WT_upr95=quantile(convert_Ct_logGEML(global_pars[["lod"]]-dpmeanW),0.95),
-		proliferation.time.WT_mean=mean(wpmeanW),
-		proliferation.time.WT_lwr95=quantile(wpmeanW,0.05),
-		proliferation.time.WT_upr95=quantile(wpmeanW,0.95),
-		clearance.time.WT_mean=mean(wrmeanW),
-		clearance.time.WT_lwr95=quantile(wrmeanW,0.05),
-		clearance.time.WT_upr95=quantile(wrmeanW,0.95),
-		total.duration.WT_mean=mean(wpmeanW+wrmeanW),
-		total.duration.WT_lwr95=quantile(wpmeanW+wrmeanW,0.05),
-		total.duration.WT_upr95=quantile(wpmeanW+wrmeanW,0.95),
-		#peak.ct.B117_mean=mean(global_pars[["lod"]]-dpmeanB),
-		#peak.ct.B117_lwr95=quantile(global_pars[["lod"]]-dpmeanB,0.05),
-		#peak.ct.B117_upr95=quantile(global_pars[["lod"]]-dpmeanB,0.95),
-		#peak.geml.B117_mean=mean(convert_Ct_logGEML(global_pars[["lod"]]-dpmeanB)),
-		#peak.geml.B117_lwr95=quantile(convert_Ct_logGEML(global_pars[["lod"]]-dpmeanB),0.05),
-		#peak.geml.B117_upr95=quantile(convert_Ct_logGEML(global_pars[["lod"]]-dpmeanB),0.95),
-		#proliferation.time.B117_mean=mean(wpmeanB),
-		#proliferation.time.B117_lwr95=quantile(wpmeanB,0.05),
-		#proliferation.time.B117_upr95=quantile(wpmeanB,0.95),
-		#clearance.time.B117_mean=mean(wrmeanB),
-		#clearance.time.B117_lwr95=quantile(wrmeanB,0.05),
-		#clearance.time.B117_upr95=quantile(wrmeanB,0.95),
-		#total.duration.B117_mean=mean(wpmeanB+wrmeanB),
-		#total.duration.B117_lwr95=quantile(wpmeanB+wrmeanB,0.05),
-		#total.duration.B117_upr95=quantile(wpmeanB+wrmeanB,0.95)
-		) %>%
-	pivot_longer(everything()) %>%
-	separate(name, c("parameter", "statistic"), sep="_") %>%
-	pivot_wider(names_from=statistic, values_from=value) %>%
-	arrange(parameter)
-
+  summarise(
+    # Peak Ct values
+    peak.ct.mean=mean(global_pars[["lod"]]-dpmean),
+    peak.ct.lwr95=quantile(global_pars[["lod"]]-dpmean,0.05),
+    peak.ct.upr95=quantile(global_pars[["lod"]]-dpmean,0.95),
+    
+    # Peak GEML (log RNA copies/ml)
+    peak.geml.mean=mean(convert_Ct_logGEML(global_pars[["lod"]]-dpmean)),
+    peak.geml.lwr95=quantile(convert_Ct_logGEML(global_pars[["lod"]]-dpmean),0.05),
+    peak.geml.upr95=quantile(convert_Ct_logGEML(global_pars[["lod"]]-dpmean),0.95),
+    
+    # Proliferation time
+    proliferation.time.mean=mean(wpmean),
+    proliferation.time.lwr95=quantile(wpmean,0.05),
+    proliferation.time.upr95=quantile(wpmean,0.95),
+    
+    # Clearance time
+    clearance.time.mean=mean(wrmean),
+    clearance.time.lwr95=quantile(wrmean,0.05),
+    clearance.time.upr95=quantile(wrmean,0.95),
+    
+    # Total duration
+    total.duration.mean=mean(wpmean+wrmean),
+    total.duration.lwr95=quantile(wpmean+wrmean,0.05),
+    total.duration.upr95=quantile(wpmean+wrmean,0.95),
+  ) %>%
+  pivot_longer(everything()) %>%
+  separate(name, into = c("parameter", "statistic"), sep = "\\.(?=[^\\.]+$)") %>%
+  pivot_wider(names_from = statistic, values_from = value) %>%
+  arrange(parameter)

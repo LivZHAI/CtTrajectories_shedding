@@ -18,7 +18,7 @@ data {
   int<lower=0> n_id;          // Number of individuals 
   real<lower=0> lod;          // Limit of detection
   int<lower=0> id[N];         // Vector marking which datum belongs to which id
-  #int<lower=0> b117[n_id];    // Vector marking b117 ids
+  int<lower=0,upper=1> value_type;    // value type of Ct or Concentration
   real t[N];                  // Vector marking the time for each data point 
   real<lower=0, upper=lod> y[N];  // Concatenated data vector 
   real<lower=0> tpsd;         // Prior sd for the onset time (days)
@@ -37,8 +37,9 @@ data {
 }
 
 transformed data {
-  real<lower=0, upper=lod> ydrop[N];  // Concatenated deviation from LOD 
-
+  # real<lower=0, upper=lod> ydrop[N];  // Concatenated deviation from LOD 
+  vector[N] ydrop;
+  
   real loglambda;
   real log1mlambda;
 
@@ -47,11 +48,25 @@ transformed data {
   real wrcauchypriorscale;
 
   // real sigma;
-
-  for(i in 1:N){
-    ydrop[i] = lod-y[i];
+   if (value_type == 1) {
+    for(i in 1:N){
+      ydrop[i] = lod - y[i]; 
+    }
+  } else {
+    real min_log_y;
+    vector[N] log_y;
+    
+    for(i in 1:N) {
+      log_y[i] = log(y[i]);
+    }
+    
+    min_log_y = min(log_y);
+    
+    for(i in 1:N) {
+      ydrop[i] = y[i] - min_log_y;
+    }
   }
-
+  
   loglambda = log(lambda);
   log1mlambda = log1m(lambda);
 
@@ -64,13 +79,9 @@ transformed data {
 
 parameters {
 
-  #real<lower=0, upper=lod> dpmeanB;    // Poplation peak Ct drop mean
-  #real<lower=0.25, upper=wpmax> wpmeanB;  // Population onset-to-peak time mean
-  #real<lower=2, upper=wrmax> wrmeanB;  // Population peak-to-recovery time mean 
-
-  real<lower=0, upper=lod> dpmeanW;    // Poplation peak Ct drop mean
-  real<lower=0.25, upper=wpmax> wpmeanW;  // Population onset-to-peak time mean
-  real<lower=2, upper=wrmax> wrmeanW;  // Population peak-to-recovery time mean 
+  real<lower=0, upper=lod> dpmean;    // Poplation peak Ct drop mean
+  real<lower=0.25, upper=wpmax> wpmean;  // Population onset-to-peak time mean
+  real<lower=2, upper=wrmax> wrmean;  // Population peak-to-recovery time mean 
 
   real<lower=0> dpsd;          // Poplation peak Ct drop sd
   real<lower=0> wpsd;          // Population onset-to-peak time sd
@@ -97,14 +108,11 @@ transformed parameters {
 model {
 
   // Hierarchical priors:
-  #dpmeanB ~ normal(dpmean_prior,dpsd_prior) T[0,lod];
-  dpmeanW ~ normal(dpmean_prior,dpsd_prior) T[0,lod];
+  dpmean ~ normal(dpmean_prior,dpsd_prior) T[0,lod];
   
-  #wpmeanB ~ normal(wpmean_prior, wpsd_prior) T[0.25,wpmax];
-  wpmeanW ~ normal(wpmean_prior, wpsd_prior) T[0.25,wpmax];
+  wpmean ~ normal(wpmean_prior, wpsd_prior) T[0.25,wpmax];
 
-  #wrmeanB ~ normal(wrmean_prior, wrsd_prior) T[2,wrmax];
-  wrmeanW ~ normal(wrmean_prior, wrsd_prior) T[2,wrmax];
+  wrmean ~ normal(wrmean_prior, wrsd_prior) T[2,wrmax];
 
   dpsd ~ cauchy(0,dpcauchypriorscale) T[0,];
   wpsd ~ cauchy(0,wpcauchypriorscale) T[0,];
@@ -115,9 +123,9 @@ model {
   // Individual parameter specifications:
   tp ~ normal(0,tpsd);
   for(i in 1:n_id){
-      dp[i] ~ normal(dpmeanW, dpsd) T[0, lod];
-      wp[i] ~ normal(wpmeanW, wpsd) T[0.25, wpmax];
-      wr[i] ~ normal(wrmeanW, wrsd) T[2, wrmax];
+      dp[i] ~ normal(dpmean, dpsd) T[0, lod];
+      wp[i] ~ normal(wpmean, wpsd) T[0.25, wpmax];
+      wr[i] ~ normal(wrmean, wrsd) T[2, wrmax];
       }
 
   // Main model specification: 
